@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+	<div>
+		<div class="header">
+			<h1>IRAC P3 Group 4</h1>
+		<div>		
+			<h2>Video Player</h2>
+			<div class="code">
+<video class="dashjs-player" autoplay id="video" controls preload="auto" muted>
+</video>
+</div>
+</div>
+			<div class="header">
+			<h2>Video Statistics</h2>
+</div>
+<div class="code">
+ <p>Video Bitrate: <span id="bitrate"></span> kbps</p>
+ <p>Video Buffer: <span id="buffer"></span> seconds</p>
+ <p>Video Representation: <span id="representation"></span></p>
+</div>
+</div>
+<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+ 	init();
+});
+function init(){
+	var video,
+	player,
+	mpd_url = "./output/stream.mpd";
+	video = document.querySelector("video");
+	player = dashjs.MediaPlayer().create();
+	player.initialize(video, mpd_url, true);
+	player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+	clearInterval(eventPoller);
+	});
+	var eventPoller = setInterval(function() {
+	var streamInfo = player.getActiveStream().getStreamInfo();
+	var dashMetrics = player.getDashMetrics();
+	var dashAdapter = player.getDashAdapter();
+	 if (dashMetrics && streamInfo) {
+	 const periodIdx = streamInfo.index;
+	 var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+	 var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+	 var bitrate = repSwitch ? Math.round(dashAdapter.
+	 getBandwidthForRepresentation(repSwitch.to,
+	 periodIdx) / 1000) : NaN;
+	 document.getElementById('buffer').innerText = bufferLevel;
+	 document.getElementById('bitrate').innerText = bitrate;
+	 document.getElementById('representation').innerText = repSwitch.to;
+	 }
+	}, 500);
+}
+</script>
+<style>
+#video {
+	width: 50%;
+	height: 50%;
+}
+p {
+	font-size: 20px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+h1 {
+	font-size: 40px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+h2 {
+	font-size: 30px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+</style>
+</html>
