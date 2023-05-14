@@ -1,0 +1,26 @@
+GENERATING DIFFERENT QUALITIES OF THE SAME VIDEO (DIFFERENT BITRATES)
+
+low config:
+.\x264.exe --output low_config.264 --fps 24 --preset slow --bitrate 100 --vbv-maxrate 4800 --vbv-bufsize 9600 --min-keyint 48 --keyint 48 --scenecut 0 --no-scenecut --pass 1 --video-filter "resize:width=160,height=90" sintel_movie.mp4
+
+medium config:
+.\x264.exe --output medium_config.264 --fps 24 --preset slow --bitrate 600 --vbv-maxrate 4800 --vbv-bufsize 9600 --min-keyint 48 --keyint 48 --scenecut 0 --no-scenecut --pass 1 --video-filter "resize:width=640,height=360" sintel_movie.mp4
+
+high config:
+.\x264.exe --output high_config.264 --fps 24 --preset slow --bitrate 2400 --vbv-maxrate 4800 --vbv-bufsize 9600 --min-keyint 48 --keyint 48 --scenecut 0 --no-scenecut --pass 1 --video-filter "resize:width=1280,height=720" sintel_movie.mp4
+
+ENCODING THE VIDEOS TO MPEG
+
+.\mp4box.exe -add low_config.264 -fps 24 low_config.mp4
+.\mp4box.exe -add medium_config.264 -fps 24 medium_config.mp4
+.\mp4box.exe -add high_config.264 -fps 24 high_config.mp4
+
+FRAGMENTING THE VIDEOS
+
+.\mp4fragment.exe low_config.mp4 low_config_frag.mp4
+.\mp4fragment.exe medium_config.mp4 medium_config_frag.mp4
+.\mp4fragment.exe high_config.mp4 high_config_frag.mp4
+
+GENERATE DASH STRUCTURE
+
+.\mp4dash.bat low_config_frag.mp4 medium_config_frag.mp4 high_config_frag.mp4
