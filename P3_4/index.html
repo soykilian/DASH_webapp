@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+	<div>
+		<div class="header">
+			<h1>IRAC P3 Group 4</h1>
+		<div>		
+			<h2>Video Player</h2>
+	<video class="dashjs-player" autoplay controls preload="auto" id="video">
+</video>
+</div>
+			<div class="header">
+			<h2>Video Statistics</h2>
+</div>
+<div class="code">
+ <p>Video Bitrate: <span id="bitrate"></span> kbps</p>
+ <p>Video Buffer: <span id="buffer"></span> seconds</p>
+ <p>Video Representation: <span id="representation"></span></p>
+ <canvas id="myChart"></canvas>
+</div>
+</div>
+<script src="http://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+	var time;
+	var timeArray = [];
+	var bitrateArray = [];
+	var bufferArray = [];
+
+	
+  	const ctx = new Chart(document.getElementById('myChart'), {
+		type: 'line',
+		data: {
+			labels: timeArray,
+			datasets: [
+				{
+					label: 'Buffer Level',
+					backgroundColor: 'rgba(252, 186, 3, 0.25)',
+					borderColor: 'rgb(252, 186, 3)',
+					data: bufferArray,
+					yAxisID: 'y1',
+					fill: true
+				},
+				{
+					label: 'Bitrate',
+					backgroundColor: 'rgba(3, 252, 198, 0.25)',
+					borderColor: 'rgb(3, 252, 198)',
+					data: bitrateArray,
+					yAxisID: 'y2',
+					fill: true
+				}
+			]
+		},
+		options: {
+			scales: {
+				y1: {
+					type: 'linear',
+					display: true,
+					position: 'left',
+					title: {
+						display: true,
+						text: 'Buffer Level (s)'
+					}
+				},
+				y2: {
+					type: 'linear',
+					display: true,
+					position: 'right',
+					title: {
+						display: true,
+						text: 'Bitrate (kbps)'
+					},
+				},
+			}
+		},
+	});
+
+	var player;
+	document.addEventListener("DOMContentLoaded", function () {
+		init();
+	});
+	function init(){
+		var video,
+		player,
+		mpd_url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+
+		video = document.querySelector("video");
+		player = dashjs.MediaPlayer().create();
+		player.initialize(video, mpd_url, true);
+		player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+		clearInterval(eventPoller);
+		});
+		var eventPoller = setInterval(function() {
+		var streamInfo = player.getActiveStream().getStreamInfo();
+		var dashMetrics = player.getDashMetrics();
+		var dashAdapter = player.getDashAdapter();
+		if (dashMetrics && streamInfo) {
+		const periodIdx = streamInfo.index;
+		var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+		var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+		var bitrate = repSwitch ? Math.round(dashAdapter.
+		getBandwidthForRepresentation(repSwitch.to,
+		periodIdx) / 1000) : NaN;
+		document.getElementById('buffer').innerText = bufferLevel;
+		document.getElementById('bitrate').innerText = bitrate;
+		document.getElementById('representation').innerText = repSwitch.to;
+		}
+		time = new Date();
+		time = time.toLocaleTimeString();
+		timeArray.push(time);
+		bitrateArray.push(bitrate);
+		bufferArray.push(bufferLevel);
+		ctx.update();
+
+	}, 500);
+	}	
+
+</script>
+<style>
+#video {
+	width: 50%;
+	height: 50%;
+}
+p {
+	font-size: 20px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+h1 {
+	font-size: 40px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+h2 {
+	font-size: 30px;
+	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+</style>
+</html>
